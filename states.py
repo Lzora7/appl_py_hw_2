@@ -8,6 +8,7 @@ class Form(StatesGroup):
     action_minutes = State()
     city = State()
     calories_goal = State()
+    city_temp = State()
 
 # контекст разговора при логировании еды
 class LogFoodContext(StatesGroup):

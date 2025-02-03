@@ -3,6 +3,7 @@ from aiogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.filters import Command, CommandObject
 from aiogram.fsm.context import FSMContext
 from states import Form, LogFoodContext
+from config import API_CITY_KEY
 import aiohttp
 import requests
 
@@ -19,7 +20,8 @@ users = {
             "calorie_goal": 2500,
             "logged_water": 500,
             "logged_calories": 1800,
-            "burned_calories": 400
+            "burned_calories": 400,
+            "city_temp": 0
     }
 }
 
@@ -72,6 +74,28 @@ def calorie_norm(weight, height, age):
     cal = 10*weight + 6.25*height - 5*age
     return cal
 
+# Температура в городе по API
+def get_current_temperature(city, api_key):
+    base_url = "http://api.openweathermap.org/data/2.5/weather"
+    params = {
+        'q': city,
+        'appid': api_key,
+        'units': 'metric'  # Используем метрическую систему (Цельсий)
+    }
+    # Выполняем GET-запрос
+    response = requests.get(base_url, params=params)
+
+    # Проверяем, успешен ли запрос
+    if response.status_code == 200:
+        resp = response.json()
+        # Извлекаем температуру
+        resp_temp = resp['main']['temp']
+        return resp_temp
+    else:
+        return None
+
+
+
 # FSM: Заполнение формы о пользователе
 @router.message(Command("set_profile"))
 async def start_form(message: Message, state: FSMContext):
@@ -106,6 +130,10 @@ async def process_city(message: Message, state: FSMContext):
 @router.message(Form.city)
 async def process_city(message: Message, state: FSMContext):
     await state.update_data(city=message.text)
+    # получение температуры по API
+    city_temp = get_current_temperature(message.text, API_CITY_KEY)
+    # запись температуры в форму
+    await state.update_data(city_temp=city_temp)
     await message.reply("Какая у вас цель калорий?")
     await state.set_state(Form.calories_goal)
 
@@ -121,6 +149,7 @@ async def process_city(message: Message, state: FSMContext):
     action_minutes = data.get("action_minutes")
     city = data.get("city")
     calories_goal = data.get("calories_goal")
+    city_temp = data.get("city_temp")
 
     # Новый user_id
     new_id = int(max(users.keys())) + 1
@@ -134,13 +163,16 @@ async def process_city(message: Message, state: FSMContext):
     users[new_id]['logged_water'] = 0
     users[new_id]['logged_calories'] = 0
     users[new_id]['burned_calories'] = 0
+    # users[new_id]['city_temp'] = int(city_temp)
     if calories_goal != '':
         users[new_id]['calorie_goal'] = int(calories_goal)
     else:
         users[new_id]['calorie_goal'] = calorie_norm(weight, height, age)
     users[new_id]['water_goal'] = water_goal(weight, action_minutes)
+    # Проверка температуры в городе (для добавления воды)
+    if int(city_temp) > 25:
+        users[new_id]['water_goal'] += 500
 
-    # age = message.text
     await message.reply(f"Итак, \n"
                         f"- вес: {weight} \n"
                         f"- рост: {height} \n"
