@@ -59,6 +59,7 @@ async def handle_callback(callback_query):
     elif callback_query.data == "btn2":
         await callback_query.message.reply("Вы нажали Кнопка 2")
 
+# Цель воды
 def water_goal(weight, action_minutes):
     base_water = int(weight) * 30 # мл
     add_water_action = int(action_minutes) / 30 * 500 # мл
@@ -66,6 +67,7 @@ def water_goal(weight, action_minutes):
     sum_water = base_water + add_water_action
     return sum_water
 
+# Норма калорий
 def calorie_norm(weight, height, age):
     cal = 10*weight + 6.25*height - 5*age
     return cal
@@ -191,7 +193,7 @@ async def log_food(message: Message, command: CommandObject, state: FSMContext):
         )
     # Поиск калорийности по API
     food_info = get_food_info(CommandObject)
-    if food_info is None:
+    if not food_info:
         print('еда не нашлась')
     else:
         food_name = food_info['name']
@@ -251,6 +253,34 @@ async def log_workout(message: Message, command: CommandObject):
     extra_water = water_need * workout_minutes / 30
     users[last_id]['water_goal'] += extra_water
     await message.reply(f"{workout_type} {workout_minutes} минут - {burned_cal} ккал. Дополнительно: выпейте {extra_water} мл. воды.")
+
+# Проверка прогресса
+@router.message(Command("check_progress"))
+async def check_progress(message: Message):
+    # актуальный пользователь
+    last_id = int(max(users.keys()))
+    # извлечение данных
+    #     вода
+    water_done = users[last_id]['logged_water']
+    water_need = users[last_id]['water_goal']
+    water_diff = water_need - water_done
+    #     калории
+    cal_done = users[last_id]['logged_calories']
+    cal_need = users[last_id]['calorie_goal']
+    cal_burned = users[last_id]['burned_calories']
+    cal_diff = cal_need - cal_done
+
+    # вывод
+    await message.reply(f"Прогресс: \n"
+                        f"- Выпито: {water_done} мл из {water_need} мл. \n"
+                        f"- Осталось: {water_diff} мл \n"
+                        f"\n"
+                        f"Калории: \n"
+                        f"- Потреблено: {cal_done} ккал из {cal_need} ккал. \n"
+                        f"- Сожжено: {cal_burned} ккал \n"
+                        f"- Баланс: {cal_diff} ккал"
+                        )
+
 
 # Функция для подключения обработчиков
 def setup_handlers(dp):
