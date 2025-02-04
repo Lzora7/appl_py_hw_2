@@ -13,5 +13,5 @@ class Form(StatesGroup):
 # контекст разговора при логировании еды
 class LogFoodContext(StatesGroup):
     food_name = State() # название еды
-    food_cal = State() # количество калорий в 100 гр еды
+    # food_cal = State() # количество калорий в 100 гр еды
     amount_gram = State() # кол-во грамм, что съел пользователь

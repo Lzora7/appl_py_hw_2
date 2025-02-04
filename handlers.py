@@ -163,7 +163,6 @@ async def process_city(message: Message, state: FSMContext):
     users[new_id]['logged_water'] = 0
     users[new_id]['logged_calories'] = 0
     users[new_id]['burned_calories'] = 0
-    # users[new_id]['city_temp'] = int(city_temp)
     if calories_goal != '':
         users[new_id]['calorie_goal'] = int(calories_goal)
     else:
@@ -223,9 +222,12 @@ async def log_food(message: Message, command: CommandObject, state: FSMContext):
         await message.answer(
             "Ошибка: не переданы аргументы"
         )
+    await state.set_state(LogFoodContext.food_name)
+    print(command.args)
     # Поиск калорийности по API
-    food_info = get_food_info(CommandObject)
-    if not food_info:
+    food_info = get_food_info(command.args)
+    print(food_info)
+    if food_info is None:
         print('еда не нашлась')
     else:
         food_name = food_info['name']
@@ -234,11 +236,13 @@ async def log_food(message: Message, command: CommandObject, state: FSMContext):
         await state.update_data(food_name=food_name)
         await state.update_data(food_cal=food_cal)
         await state.set_state(LogFoodContext.amount_gram)
+        print('записал')
 
 # Логирование еды 1.2
-@router.message(LogFoodContext.food_cal)
-async def log_food(message: Message, state: FSMContext):
+@router.message(LogFoodContext.amount_gram)
+async def log_food_2(message: Message, state: FSMContext):
     # получение записанных данных
+    print('дошел')
     data = await state.get_data()
     food_name = data.get('food_name')
     food_cal = data.get('food_cal')
