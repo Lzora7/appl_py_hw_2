@@ -4,26 +4,12 @@ from aiogram.filters import Command, CommandObject
 from aiogram.fsm.context import FSMContext
 from states import Form, LogFoodContext
 from config import API_CITY_KEY
-import aiohttp
 import requests
 
 router = Router()
 
-users = {
-    # 1: {
-    #         "weight": 80,
-    #         "height": 184,
-    #         "age": 26,
-    #         "activity": 45,
-    #         "city": "Paris",
-    #         "water_goal": 2400,
-    #         "calorie_goal": 2500,
-    #         "logged_water": 500,
-    #         "logged_calories": 1800,
-    #         "burned_calories": 400,
-    #         "city_temp": 0
-    # }
-}
+# хранилище
+users = {}
 
 # Обработчик команды /start
 @router.message(Command("start"))
