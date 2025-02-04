@@ -222,7 +222,7 @@ async def log_food(message: Message, command: CommandObject, state: FSMContext):
         await message.answer(
             "Ошибка: не переданы аргументы"
         )
-    await state.set_state(LogFoodContext.food_name)
+    # await state.set_state(LogFoodContext.food_name)
     print(command.args)
     # Поиск калорийности по API
     food_info = get_food_info(command.args)
@@ -237,6 +237,8 @@ async def log_food(message: Message, command: CommandObject, state: FSMContext):
         await state.update_data(food_cal=food_cal)
         await state.set_state(LogFoodContext.amount_gram)
         print('записал')
+        # грамовка
+        await message.reply(f"{food_name} - {food_cal} ккал на 100 г. Сколько грамм вы съели?")
 
 # Логирование еды 1.2
 @router.message(LogFoodContext.amount_gram)
@@ -247,9 +249,9 @@ async def log_food_2(message: Message, state: FSMContext):
     food_name = data.get('food_name')
     food_cal = data.get('food_cal')
     # грамовка
-    await message.reply(f"{food_name} - {food_cal} ккал на 100 г. Сколько грамм вы съели?")
+    # await message.reply(f"{food_name} - {food_cal} ккал на 100 г. Сколько грамм вы съели?")
     amount_gram = int(message.text)
-    new_cal = amount_gram * food_cal
+    new_cal = amount_gram * food_cal / 100
     # актуальный пользователь
     last_id = int(max(users.keys()))
     # логируем калории
@@ -257,7 +259,7 @@ async def log_food_2(message: Message, state: FSMContext):
     # остаток по калориям
     residue_cal = users[last_id]['calorie_goal'] - users[last_id]['logged_calories']
     await message.reply(f"До нормы осталось употребить: {residue_cal} г")
-
+    await state.clear()
 # Логирование тренировок
 @router.message(Command("log_workout"))
 async def log_workout(message: Message, command: CommandObject):
