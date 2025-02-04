@@ -10,19 +10,19 @@ import requests
 router = Router()
 
 users = {
-    1: {
-            "weight": 80,
-            "height": 184,
-            "age": 26,
-            "activity": 45,
-            "city": "Paris",
-            "water_goal": 2400,
-            "calorie_goal": 2500,
-            "logged_water": 500,
-            "logged_calories": 1800,
-            "burned_calories": 400,
-            "city_temp": 0
-    }
+    # 1: {
+    #         "weight": 80,
+    #         "height": 184,
+    #         "age": 26,
+    #         "activity": 45,
+    #         "city": "Paris",
+    #         "water_goal": 2400,
+    #         "calorie_goal": 2500,
+    #         "logged_water": 500,
+    #         "logged_calories": 1800,
+    #         "burned_calories": 400,
+    #         "city_temp": 0
+    # }
 }
 
 # Обработчик команды /start
@@ -66,7 +66,7 @@ def water_goal(weight, action_minutes):
     base_water = int(weight) * 30 # мл
     add_water_action = int(action_minutes) / 30 * 500 # мл
     # add_water_weather
-    sum_water = base_water + add_water_action
+    sum_water = round(base_water + add_water_action, 0)
     return sum_water
 
 # Норма калорий
@@ -152,7 +152,10 @@ async def process_city(message: Message, state: FSMContext):
     city_temp = data.get("city_temp")
 
     # Новый user_id
-    new_id = int(max(users.keys())) + 1
+    if len(users) > 0:
+        new_id = int(max(users.keys())) + 1
+    else:
+        new_id = 1
     # Внесение данных
     users[new_id] = {}
     users[new_id]['weight'] = int(weight)
